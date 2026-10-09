@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>dmm2xm web — Doom 2D DMM ↔ tracker</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <div class="mark">D2D</div>
+      <div>
+        <h1>DMM<span>2</span>XM // WEB</h1>
+        <p class="sub">Doom 2D music · DMM ↔ XM / MOD / S3M / IT · движок на WebAssembly</p>
+      </div>
+      <div class="stamp">
+        <div>SRC <b>Y-Dr. Now</b> · 2026-10-04</div>
+        <div>ENGINE <b id="engine">CPython WASM</b></div>
+        <div>FORUM <a href="https://doom2d.org/forum/viewtopic.php?f=8&t=1081&start=40">t=1081</a></div>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button type="button" class="active" data-tab="back">Модуль → DMM</button>
+      <button type="button" data-tab="fwd">DMM / WAD → XM</button>
+      <button type="button" data-tab="about">Справка</button>
+    </nav>
+
+    <section class="layout">
+      <div>
+        <section class="panel" id="panel-back">
+          <h2>XM / MOD / S3M / IT → DMM + DMI</h2>
+          <div class="drop" id="drop-back">Перетащи модули сюда<br><b>или выбери файлы</b><br>.xm .mod .s3m .it</div>
+          <div class="row">
+            <label class="file-btn">Выбрать файлы<input id="pick-back" type="file" accept=".xm,.mod,.s3m,.it" multiple></label>
+            <button type="button" class="ghost" id="clear-back">Очистить</button>
+          </div>
+          <div class="files" id="list-back"></div>
+          <div class="opts">
+            <div class="radios" id="channels">
+              <span class="hint">Если каналов больше 8</span>
+              <label><input type="radio" name="ch" value="loudness" checked> 8 самых громких (рекомендуется)</label>
+              <label><input type="radio" name="ch" value="count"> 8 самых используемых по числу нот</label>
+              <label><input type="radio" name="ch" value="first"> первые 8 по номеру</label>
+            </div>
+            <label class="field">Громкость во время ноты
+              <select id="slides">
+                <option value="events" selected>События громкости — без новых инструментов</option>
+                <option value="off">Как раньше: слайды игнорируются, огибающие IT запекаются</option>
+                <option value="bake">Запекать слайды и огибающие в инструменты</option>
+              </select>
+            </label>
+            <div class="checks">
+              <label><input type="checkbox" id="offsets"> Учитывать смещение семпла (Oxx/9xx), до 32 копий</label>
+              <label><input type="checkbox" id="subsongs"> Разделить subsongs (Bxx/Cxx) на отдельные .dmm</label>
+            </div>
+            <p class="hint">Рядом с .dmm пишутся .dmi. Формат DMM — 8 каналов, частота ноты не выше 65535 Гц, нота не переносится через границу паттерна.</p>
+          </div>
+          <div class="row">
+            <button type="button" class="run" id="run-back">Конвертировать в DMM</button>
+          </div>
+        </section>
+
+        <section class="panel hidden" id="panel-fwd">
+          <h2>DMM / WAD → XM</h2>
+          <div class="drop" id="drop-fwd">Перетащи .dmm, .dmi или .wad<br><b>.dmi кладутся рядом с .dmm</b></div>
+          <div class="row">
+            <label class="file-btn">Выбрать файлы<input id="pick-fwd" type="file" accept=".dmm,.dmi,.wad" multiple></label>
+            <button type="button" class="ghost" id="clear-fwd">Очистить</button>
+          </div>
+          <div class="files" id="list-fwd"></div>
+          <div class="opts">
+            <label class="field">Квантование (−q)
+              <input id="quant" type="number" min="1" max="31" value="4">
+            </label>
+            <label class="field">Макс. строк на паттерн (−r)
+              <input id="rows" type="number" min="1" max="1024" value="256">
+            </label>
+            <div class="checks">
+              <label><input type="checkbox" id="mono"> Моно (−m)</label>
+              <label><input type="checkbox" id="bug"> Эмуляция SB-бага 44 кГц (−b)</label>
+            </div>
+          </div>
+          <div class="row">
+            <button type="button" class="run" id="run-fwd">Конвертировать в XM</button>
+          </div>
+        </section>
+
+        <section class="panel hidden" id="panel-about">
+          <h2>Что это</h2>
+          <div class="about">
+            <p>Веб-версия конвертера <b>dmm2xm</b> из темы «Новая версия dmm2xm» на doom2d.org. Исходники Python (04.10.2026) не переписывались: в браузере их выполняет CPython, собранный в WebAssembly (Pyodide 0.27.7).</p>
+            <p>Обратная сторона пишет .dmm и инструменты .dmi. Прямая читает отдельный .dmm или песню из doom2d.wad / другого WAD. Пакет скачивается zip-архивом, внутри есть log.txt.</p>
+            <p>Открывать как file:// нельзя: воркеру нужен HTTP. Из папки сайта:</p>
+            <p><code>python3 -m http.server 8080</code></p>
+            <p>Затем http://localhost:8080 . Первый запуск тянет рантайм WASM с jsDelivr (~10 МБ), дальше его держит кэш браузера. Полное описание опций — в <a href="engine/README_RU.txt">README_RU.txt</a> автора.</p>
+          </div>
+        </section>
+      </div>
+
+      <aside class="panel">
+        <h2>Журнал</h2>
+        <div class="status" id="status">Ожидание рантайма WebAssembly…</div>
+        <pre class="log" id="log">Движок ещё не загружен.</pre>
+        <div class="downloads" id="downloads"></div>
+      </aside>
+    </section>
+    <footer>
+      <span>Grom PE & Artem Vasilev · порт Y-Dr. Now · веб-сборка не меняет алгоритм</span>
+      <span>DMM ≤ 8 ch · 2000…65535 Hz</span>
+    </footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
